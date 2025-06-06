@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviour
         int obstacleCount = Random.Range(1, maxObstaclesPerSegment + 1);
 
         List<Vector3> spawnedPositions = new List<Vector3>();
-        float minDistanceBetweenObstacles = 20f; // Adjust this to control spacing
+        float minDistanceBetweenObstacles = 20f;
 
         int attemptsMax = 20;
 
@@ -103,13 +103,11 @@ public class GameManager : MonoBehaviour
             do
             {
                 float x = laneX[Random.Range(0, laneX.Length)];
-                // Choose a random Z within the segment, leaving some margin
                 float z = segmentPos.z + Random.Range(2f, offset.z - 2f);
-
                 candidatePos = new Vector3(x, obstacleY, z);
                 attempts++;
 
-                // Check distance to all previously spawned obstacles
+                // Ensure enough space from previous
                 bool tooClose = false;
                 foreach (var pos in spawnedPositions)
                 {
@@ -125,18 +123,16 @@ public class GameManager : MonoBehaviour
             } while (attempts < attemptsMax);
 
             if (attempts == attemptsMax)
-            {
-                // Could not find a suitable position, skip this obstacle
                 continue;
-            }
 
-            GameObject obstacle = ObjectPooler.Instance.SpawnFromPool(obstacleTag, candidatePos, Quaternion.identity);
+            // 🔀 Randomize obstacle type
+            string selectedTag = Random.value < 0.5f ? "JumpObstacle" : "SlideObstacle";
+
+            GameObject obstacle = ObjectPooler.Instance.SpawnFromPool(selectedTag, candidatePos, Quaternion.identity);
             activeObstacles.Add(obstacle);
             spawnedPositions.Add(candidatePos);
         }
     }
-
-
 
 
 
@@ -178,7 +174,7 @@ public class GameManager : MonoBehaviour
     }
 
     public void AddCoin()
-    {
+    { 
         // This can be expanded to update UI, currency, etc.
         Debug.Log("Coin collected!");
     }

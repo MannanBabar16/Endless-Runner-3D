@@ -721,7 +721,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 144.3, y: -62.2}
+  m_AnchoredPosition: {x: 144.29999, y: -62.19995}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &350524041
@@ -1590,8 +1590,12 @@ MonoBehaviour:
     prefab: {fileID: 8416288500859209489, guid: 8a85ed265404f4c4b9d0ee7d391379f0,
       type: 3}
     size: 50
-  - tag: Obstacle
+  - tag: JumpObstacle
     prefab: {fileID: 1598080253373096897, guid: 5d3dc5bb8e6653c4282240af7c4af03f,
+      type: 3}
+    size: 20
+  - tag: SlideObstacle
+    prefab: {fileID: 1229226166656279896, guid: be570c3d24899b141aa20111217f0b22,
       type: 3}
     size: 20
 --- !u!4 &1941966341
@@ -1811,7 +1815,7 @@ Rigidbody:
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 112
   m_CollisionDetection: 1
 --- !u!136 &2017890280
@@ -1825,9 +1829,9 @@ CapsuleCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.5
-  m_Height: 1.9850605
+  m_Height: 2
   m_Direction: 1
-  m_Center: {x: 0, y: 0.014485717, z: 0}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!95 &2017890281
 Animator:
   serializedVersion: 5
