@@ -6,6 +6,7 @@ TagManager:
   tags:
   - SlideObstacle
   - JumpObstacle
+  - Ground
   layers:
   - Default
   - TransparentFX
