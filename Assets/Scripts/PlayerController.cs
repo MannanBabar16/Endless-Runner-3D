@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -25,6 +26,7 @@ public class PlayerController : MonoBehaviour
     [Header("Power-Up Settings")]
     [SerializeField] private float invisibilityDuration = 5f;
     [SerializeField] private float invisibilitySpeedMultiplier = 1.5f;
+    [SerializeField] private float flickerInterval = 0.1f;
     [SerializeField] private float magnetDuration = 5f;
     [SerializeField] private float magnetRadius = 5f;
     [SerializeField] private LayerMask coinLayer;
@@ -37,17 +39,15 @@ public class PlayerController : MonoBehaviour
 
     private bool isInvisible = false;
     private bool isMagnetActive = false;
-    private float invisibilityTimer = 0f;
     private float magnetTimer = 0f;
 
-    // Cached original values
     private float originalHeight;
     private Vector3 originalCenter;
-    private float slideHeight = 1f;
+    private float slideHeight = 1.5f;
 
-    // Invisibility
-    private Material playerMaterial;
-    private Color originalColor;
+    private Renderer[] renderers;
+    private TrailRenderer trail;
+    private Coroutine invisibilityRoutine;
 
     private void Start()
     {
@@ -63,37 +63,27 @@ public class PlayerController : MonoBehaviour
             originalCenter = capsule.center;
         }
 
-        playerMaterial = GetComponentInChildren<Renderer>().material;
-        originalColor = playerMaterial.color;
+        renderers = GetComponentsInChildren<Renderer>();
+        trail = GetComponentInChildren<TrailRenderer>();
+        if (trail) trail.enabled = false;
     }
 
     private void Update()
     {
         HandleTouchInput();
 
-        // Smooth lane switching (X-axis)
         float newX = Mathf.MoveTowards(transform.position.x, targetPosition.x, turnSpeed * Time.deltaTime);
         transform.position = new Vector3(newX, transform.position.y, transform.position.z);
 
-        // Forward movement (slide speed when sliding)
         float speed = isSliding ? slideSpeed : forwardSpeed;
         transform.Translate(Vector3.forward * speed * Time.deltaTime, Space.World);
 
-        // Slide timer
         if (isSliding)
         {
             slideTimer -= Time.deltaTime;
             if (slideTimer <= 0f) EndSlide();
         }
 
-        // Invisibility timer
-        if (isInvisible)
-        {
-            invisibilityTimer -= Time.deltaTime;
-            if (invisibilityTimer <= 0f) EndInvisibility();
-        }
-
-        // Magnet timer
         if (isMagnetActive)
         {
             magnetTimer -= Time.deltaTime;
@@ -182,42 +172,56 @@ public class PlayerController : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
+        if (collision.gameObject.CompareTag("Ground")) isGrounded = true;
     }
 
     private void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = false;
-        }
+        if (collision.gameObject.CompareTag("Ground")) isGrounded = false;
     }
 
     public void ActivateInvisibility()
     {
         if (isInvisible) return;
 
-        isInvisible = true;
-        invisibilityTimer = invisibilityDuration;
+        if (invisibilityRoutine != null) StopCoroutine(invisibilityRoutine);
+        invisibilityRoutine = StartCoroutine(InvisibilityFlicker());
+    }
 
-        Color c = playerMaterial.color;
-        c.a = 0.3f;
-        playerMaterial.color = c;
+    private IEnumerator InvisibilityFlicker()
+    {
+        isInvisible = true;
+        float timer = 0f;
+        bool visible = false;
+
+        if (trail) trail.enabled = true;
 
         forwardSpeed *= invisibilitySpeedMultiplier;
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Obstacle"), true);
-    }
 
-    private void EndInvisibility()
-    {
-        isInvisible = false;
+        while (timer < invisibilityDuration)
+        {
+            foreach (Renderer r in renderers)
+            {
+                if (r) r.enabled = visible;
+            }
+            visible = !visible;
 
-        playerMaterial.color = originalColor;
+            timer += flickerInterval;
+            yield return new WaitForSeconds(flickerInterval);
+        }
+
+        foreach (Renderer r in renderers)
+        {
+            if (r) r.enabled = true;
+        }
+
+        if (trail) trail.enabled = false;
+
         forwardSpeed /= invisibilitySpeedMultiplier;
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Obstacle"), false);
+
+        isInvisible = false;
     }
 
     public void ActivateMagnet()
@@ -232,7 +236,7 @@ public class PlayerController : MonoBehaviour
         foreach (Collider coin in coins)
         {
             Transform t = coin.transform;
-            t.position = Vector3.MoveTowards(t.position, transform.position, 10f * Time.deltaTime);
+            t.position = Vector3.MoveTowards(t.position, transform.position, 40f * Time.deltaTime);
         }
     }
 

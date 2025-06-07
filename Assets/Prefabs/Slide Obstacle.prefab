@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7706795187300409016}
   - component: {fileID: 5608637356181408828}
   - component: {fileID: 3301579128978491995}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Slide Obstacle
   m_TagString: SlideObstacle
   m_Icon: {fileID: 0}

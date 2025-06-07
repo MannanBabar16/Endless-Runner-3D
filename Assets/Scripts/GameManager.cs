@@ -36,10 +36,24 @@ public class GameManager : MonoBehaviour
     private List<GameObject> activeObstacles = new List<GameObject>();
 
     private bool gameOver = false;
+    
+    [Header("Power-Up Settings")]
+    public string invisibilityTag = "Invisibility";
+    public string magnetTag = "Magnet";
+    public float powerupSpawnChance = 0.2f;
+
+    public float invisibilityChance = 0.5f; // 50%
+    
+    public float magnetChance = 0.5f; // 50%
+
+    public float powerupY = 1f;
+    private List<GameObject> activePowerups = new List<GameObject>();
+
 
     void Start()
     {
         SpawnFirstSegment();
+
     }
 
     void Update()
@@ -70,6 +84,7 @@ public class GameManager : MonoBehaviour
 
         SpawnCoins(previousPosition);
         SpawnObstacles(previousPosition);
+        SpawnPowerUp(previousPosition);
     }
 
     void SpawnCoins(Vector3 segmentPos)
@@ -133,6 +148,20 @@ public class GameManager : MonoBehaviour
             spawnedPositions.Add(candidatePos);
         }
     }
+    
+    void SpawnPowerUp(Vector3 segmentPos)
+    {
+        if (Random.value > powerupSpawnChance) return;
+
+        float x = laneX[Random.Range(0, laneX.Length)];
+        float z = segmentPos.z + Random.Range(4f, offset.z - 4f);
+        Vector3 pos = new Vector3(x, powerupY, z);
+
+        string tag = Random.value < invisibilityChance ? invisibilityTag : magnetTag;
+        GameObject powerup = ObjectPooler.Instance.SpawnFromPool(tag, pos, Quaternion.identity);
+        activePowerups.Add(powerup);
+    }
+
 
 
 
@@ -164,6 +193,17 @@ public class GameManager : MonoBehaviour
                 activeObstacles.RemoveAt(i);
             }
         }
+        
+        //Power Ups
+        for (int i = activePowerups.Count - 1; i >= 0; i--)
+        {
+            if (player.position.z - activePowerups[i].transform.position.z > destroyDistance)
+            {
+                activePowerups[i].SetActive(false);
+                activePowerups.RemoveAt(i);
+            }
+        }
+
     }
 
     public void GameOver()

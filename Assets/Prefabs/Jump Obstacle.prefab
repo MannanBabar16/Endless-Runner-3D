@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7914683039434414113}
   - component: {fileID: 5401912568310319781}
   - component: {fileID: -6128550749964317502}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Jump Obstacle
   m_TagString: JumpObstacle
   m_Icon: {fileID: 0}
