@@ -45,7 +45,6 @@ public class ObjectPooler : MonoBehaviour
        {
            if (!poolDictionary.ContainsKey(tag))
            {
-               Debug.LogWarning($"Pool with tag {tag} doesn't exist.");
                return null;
            }
    
@@ -55,7 +54,7 @@ public class ObjectPooler : MonoBehaviour
            obj.transform.position = position;
            obj.transform.rotation = rotation;
    
-           poolDictionary[tag].Enqueue(obj); // Push it back for reuse (circular pool)
+           poolDictionary[tag].Enqueue(obj); 
    
            return obj;
        }

@@ -1,12 +1,24 @@
-using System.Collections;
-using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class UiManager : MonoBehaviour
 {
     [Header("UI References")]
     public TextMeshProUGUI coinText;
+
+    [Header("Power-Up UI")]
+    public Slider magnetSlider;
+    public Slider invisibilitySlider;
+
+    public GameObject magnetSliderPanel;
+    public GameObject invisibilitySliderPanel;
+
+    private float magnetTimer;
+    private float invisibilityTimer;
+
+    private bool isMagnetActive = false;
+    private bool isInvisibilityActive = false;
 
     [Header("Dependencies")]
     public GameManager gameManager;
@@ -25,15 +37,63 @@ public class UiManager : MonoBehaviour
             return;
         }
 
-        // Subscribe to the coin collected event
         gameManager.onCoinCollected.AddListener(UpdateUI);
-
-        // Initialize the UI with the starting coin count
         UpdateUI(gameManager.coinCount);
+
+        // Ensure power-up panels are hidden initially
+        magnetSliderPanel.SetActive(false);
+        invisibilitySliderPanel.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (isMagnetActive)
+        {
+            magnetTimer -= Time.deltaTime;
+            magnetSlider.value = magnetTimer;
+
+            if (magnetTimer <= 0f)
+            {
+                isMagnetActive = false;
+                magnetSliderPanel.SetActive(false);
+            }
+        }
+
+        if (isInvisibilityActive)
+        {
+            invisibilityTimer -= Time.deltaTime;
+            invisibilitySlider.value = invisibilityTimer;
+
+            if (invisibilityTimer <= 0f)
+            {
+                isInvisibilityActive = false;
+                invisibilitySliderPanel.SetActive(false);
+            }
+        }
     }
 
     void UpdateUI(int count)
     {
         coinText.text = $"Coins: {count}";
+    }
+
+    public void ActivateMagnet(float duration)
+    {
+        magnetTimer = duration;
+        isMagnetActive = true;
+
+        magnetSliderPanel.SetActive(true);
+        magnetSlider.maxValue = duration;
+        magnetSlider.value = duration;
+    }
+
+    public void ActivateInvisibility(float duration)
+    {
+        invisibilityTimer = duration;
+        isInvisibilityActive = true;
+
+        invisibilitySliderPanel.SetActive(true);
+        invisibilitySlider.maxValue = duration;
+        invisibilitySlider.value = duration;
     }
 }

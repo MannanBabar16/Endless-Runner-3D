@@ -48,6 +48,8 @@ public class PlayerController : MonoBehaviour
     private Renderer[] renderers;
     private TrailRenderer trail;
     private Coroutine invisibilityRoutine;
+    
+    public UiManager uiManager;
 
     private void Start()
     {
@@ -198,6 +200,7 @@ public class PlayerController : MonoBehaviour
 
         forwardSpeed *= invisibilitySpeedMultiplier;
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Obstacle"), true);
+        if (uiManager) uiManager.ActivateInvisibility(invisibilityDuration);
 
         while (timer < invisibilityDuration)
         {
@@ -222,12 +225,16 @@ public class PlayerController : MonoBehaviour
         Physics.IgnoreLayerCollision(LayerMask.NameToLayer("Player"), LayerMask.NameToLayer("Obstacle"), false);
 
         isInvisible = false;
+        
+
     }
 
     public void ActivateMagnet()
     {
         isMagnetActive = true;
         magnetTimer = magnetDuration;
+        
+        if (uiManager) uiManager.ActivateMagnet(magnetDuration);
     }
 
     private void AttractCoins()
