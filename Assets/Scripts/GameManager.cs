@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
     
     public int gameScore = 0;
     public UnityEvent<int> onScoreUpdated = new UnityEvent<int>();
-    public float scoreRate = 10f; 
+    public float scoreRate = 100f; 
 
 
 
