@@ -22,6 +22,9 @@ public class UiManager : MonoBehaviour
 
     [Header("Dependencies")]
     public GameManager gameManager;
+    
+    public TextMeshProUGUI scoreText;
+
 
     void Start()
     {
@@ -43,6 +46,10 @@ public class UiManager : MonoBehaviour
         // Ensure power-up panels are hidden initially
         magnetSliderPanel.SetActive(false);
         invisibilitySliderPanel.SetActive(false);
+        
+        gameManager.onScoreUpdated.AddListener(UpdateScoreUI);
+        UpdateScoreUI(gameManager.gameScore);
+
     }
 
     void Update()
@@ -96,4 +103,11 @@ public class UiManager : MonoBehaviour
         invisibilitySlider.maxValue = duration;
         invisibilitySlider.value = duration;
     }
+    
+    void UpdateScoreUI(int score)
+    {
+        if (scoreText != null)
+            scoreText.text = $"Score: {score}";
+    }
+
 }

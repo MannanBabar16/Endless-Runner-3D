@@ -48,6 +48,11 @@ public class GameManager : MonoBehaviour
 
     public float powerupY = 1f;
     private List<GameObject> activePowerups = new List<GameObject>();
+    
+    public int gameScore = 0;
+    public UnityEvent<int> onScoreUpdated = new UnityEvent<int>();
+    public float scoreRate = 10f; 
+
 
 
     void Start()
@@ -66,6 +71,10 @@ public class GameManager : MonoBehaviour
         }
 
         CleanupObjects();
+        
+        gameScore += Mathf.FloorToInt(scoreRate * Time.deltaTime);
+        onScoreUpdated.Invoke(gameScore);
+
     }
 
     void SpawnFirstSegment()
