@@ -20,8 +20,7 @@ public class PlayerController : MonoBehaviour
     [Header("Jump Settings")]
     [SerializeField] private float jumpForce = 10f;
 
-    [Header("Spawn Settings")]
-    [SerializeField] private Vector3 spawnPosition;
+
 
     [Header("Power-Up Settings")]
     [SerializeField] private float invisibilityDuration = 5f;
@@ -56,7 +55,6 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         capsule = GetComponent<CapsuleCollider>();
 
-        transform.position = spawnPosition;
         targetPosition = transform.position;
 
         if (capsule)

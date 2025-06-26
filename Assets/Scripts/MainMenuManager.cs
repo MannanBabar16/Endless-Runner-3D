@@ -1,17 +1,46 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class MainMenuManager : MonoBehaviour
 {
-    public void PlayGame()
-    {
-        SceneManager.LoadScene("Gameplay"); // Replace with your actual gameplay scene name
-    }
-
-    public void QuitGame()
-    {
-        Application.Quit();
-    }
+   public TextMeshProUGUI highScoreText;
+   public TextMeshProUGUI totalCoinsText;
+   public GameObject StorePanel;
+   
+       void Start()
+       {
+           UpdateStats();
+       }
+   
+       void UpdateStats()
+       {
+           highScoreText.text = "" + SaveData.GetHighScore();
+           totalCoinsText.text = "" + SaveData.GetTotalCoins();
+       }
+   
+       public void OnPlayPressed()
+       {
+           SceneManager.LoadScene("Gameplay");
+       }
+   
+       public void OnQuitPressed()
+       {
+           Application.Quit();
+       }
+   
+       public void OnOpenStore()
+       {
+           // Activate store UI panel
+           Debug.Log("Store opened");
+           StorePanel.SetActive(true);
+       }
+       
+       public void OnCloseStore()
+       {
+      
+           StorePanel.SetActive(false);
+       }
 }

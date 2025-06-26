@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using Cinemachine;
+
 
 public class GameManager : MonoBehaviour
 {
     [Header("Segment Management")]
     public List<string> segmentTags;
-    public Transform player;
     public Vector3 startSpawnPosition;
     public Vector3 offset;
     public float spawnTrigger;
@@ -19,11 +20,11 @@ public class GameManager : MonoBehaviour
     public string obstacleTag = "Obstacle";
     public int coinsPerChunk = 5;
     public int maxObstaclesPerSegment = 3;
-    public float obstacleY = 0.5f; // Adjust based on obstacle prefab pivot
+    public float obstacleY = 0.5f;
     public float coinY = 1f;
 
     public float[] laneX = new float[] { -3f, 0f, 3f };
-    
+
     public int coinCount = 0;
     public UnityEvent<int> onCoinCollected = new UnityEvent<int>();
 
@@ -36,45 +37,70 @@ public class GameManager : MonoBehaviour
     private List<GameObject> activeObstacles = new List<GameObject>();
 
     private bool gameOver = false;
-    
+
     [Header("Power-Up Settings")]
     public string invisibilityTag = "Invisibility";
     public string magnetTag = "Magnet";
     public float powerupSpawnChance = 0.2f;
-
-    public float invisibilityChance = 0.5f; // 50%
-    
-    public float magnetChance = 0.5f; // 50%
-
+    public float invisibilityChance = 0.5f;
+    public float magnetChance = 0.5f;
     public float powerupY = 1f;
     private List<GameObject> activePowerups = new List<GameObject>();
-    
+
     public int gameScore = 0;
     public UnityEvent<int> onScoreUpdated = new UnityEvent<int>();
-    public float scoreRate = 100f; 
+    public float scoreRate = 100f;
 
+    [Header("Player Prefabs")]
+    public GameObject[] playerPrefabs;
 
+    [Header("Spawn Settings")]
+    public Vector3 spawnPoint;
+
+    public UiManager uiManager;
+
+    private GameObject currentPlayer;
+    private Transform playerTransform;
 
     void Start()
     {
         SpawnFirstSegment();
-
+        SpawnSelectedPlayer();
     }
 
     void Update()
     {
-        if (gameOver) return;
+        if (gameOver || playerTransform == null) return;
 
-        if (player.position.z + spawnTrigger > previousPosition.z)
+        if (playerTransform.position.z + spawnTrigger > previousPosition.z)
         {
             SpawnNextSegment();
         }
 
         CleanupObjects();
-        
+
         gameScore += Mathf.FloorToInt(scoreRate * Time.deltaTime);
         onScoreUpdated.Invoke(gameScore);
+    }
 
+    void SpawnSelectedPlayer()
+    {
+        int selectedIndex = SaveData.GetSelectedPlayer();
+        currentPlayer = Instantiate(playerPrefabs[selectedIndex], spawnPoint, Quaternion.identity);
+        playerTransform = currentPlayer.transform;
+
+        PlayerController controller = currentPlayer.GetComponent<PlayerController>();
+        if (controller != null && uiManager != null)
+        {
+            controller.uiManager = uiManager;
+        }
+        
+        CinemachineVirtualCamera vcam = FindObjectOfType<CinemachineVirtualCamera>();
+        if (vcam != null)
+        {
+            vcam.Follow = currentPlayer.transform;
+            vcam.LookAt = currentPlayer.transform;
+        }
     }
 
     void SpawnFirstSegment()
@@ -103,20 +129,17 @@ public class GameManager : MonoBehaviour
 
         for (int i = 0; i < coinsPerChunk; i++)
         {
-            Vector3 pos = new Vector3(x, coinY, startZ + i * 2f); // even spacing
+            Vector3 pos = new Vector3(x, coinY, startZ + i * 2f);
             GameObject coin = ObjectPooler.Instance.SpawnFromPool(coinTag, pos, Quaternion.identity);
             activeCoins.Add(coin);
         }
     }
 
-
     void SpawnObstacles(Vector3 segmentPos)
     {
         int obstacleCount = Random.Range(1, maxObstaclesPerSegment + 1);
-
         List<Vector3> spawnedPositions = new List<Vector3>();
         float minDistanceBetweenObstacles = 20f;
-
         int attemptsMax = 20;
 
         for (int i = 0; i < obstacleCount; i++)
@@ -131,7 +154,6 @@ public class GameManager : MonoBehaviour
                 candidatePos = new Vector3(x, obstacleY, z);
                 attempts++;
 
-                // Ensure enough space from previous
                 bool tooClose = false;
                 foreach (var pos in spawnedPositions)
                 {
@@ -146,18 +168,15 @@ public class GameManager : MonoBehaviour
 
             } while (attempts < attemptsMax);
 
-            if (attempts == attemptsMax)
-                continue;
+            if (attempts == attemptsMax) continue;
 
-            // 🔀 Randomize obstacle type
             string selectedTag = Random.value < 0.5f ? "JumpObstacle" : "SlideObstacle";
-
             GameObject obstacle = ObjectPooler.Instance.SpawnFromPool(selectedTag, candidatePos, Quaternion.identity);
             activeObstacles.Add(obstacle);
             spawnedPositions.Add(candidatePos);
         }
     }
-    
+
     void SpawnPowerUp(Vector3 segmentPos)
     {
         if (Random.value > powerupSpawnChance) return;
@@ -171,76 +190,73 @@ public class GameManager : MonoBehaviour
         activePowerups.Add(powerup);
     }
 
-
-
-
     void CleanupObjects()
     {
-        // Segments
-        while (activeSegments.Count > 0 && player.position.z - activeSegments.Peek().transform.position.z > destroyDistance)
+        float playerZ = playerTransform.position.z;
+
+        while (activeSegments.Count > 0 && playerZ - activeSegments.Peek().transform.position.z > destroyDistance)
         {
             GameObject seg = activeSegments.Dequeue();
             seg.SetActive(false);
         }
 
-        // Coins
         for (int i = activeCoins.Count - 1; i >= 0; i--)
         {
-            if (player.position.z - activeCoins[i].transform.position.z > destroyDistance)
+            if (playerZ - activeCoins[i].transform.position.z > destroyDistance)
             {
                 activeCoins[i].SetActive(false);
                 activeCoins.RemoveAt(i);
             }
         }
 
-        // Obstacles
         for (int i = activeObstacles.Count - 1; i >= 0; i--)
         {
-            if (player.position.z - activeObstacles[i].transform.position.z > destroyDistance)
+            if (playerZ - activeObstacles[i].transform.position.z > destroyDistance)
             {
                 activeObstacles[i].SetActive(false);
                 activeObstacles.RemoveAt(i);
             }
         }
-        
-        //Power Ups
+
         for (int i = activePowerups.Count - 1; i >= 0; i--)
         {
-            if (player.position.z - activePowerups[i].transform.position.z > destroyDistance)
+            if (playerZ - activePowerups[i].transform.position.z > destroyDistance)
             {
                 activePowerups[i].SetActive(false);
                 activePowerups.RemoveAt(i);
             }
         }
-
     }
 
     public void GameOver()
     {
         gameOver = true;
         gameOverPanel.SetActive(true);
-        player.GetComponent<PlayerController>().enabled = false;
+
+        if (currentPlayer != null)
+        {
+            var controller = currentPlayer.GetComponent<PlayerController>();
+            if (controller != null)
+                controller.enabled = false;
+        }
+
+        SaveData.AddCoins(coinCount);
+        SaveData.SetHighScore(gameScore);
     }
 
     public void AddCoin()
-    { 
-        // This can be expanded to update UI, currency, etc.
+    {
         Debug.Log("Coin collected!");
     }
-    
+
     public void CollectCoin()
     {
         coinCount++;
         onCoinCollected.Invoke(coinCount);
     }
-    
-
 
     public void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
-
-
-
 }
