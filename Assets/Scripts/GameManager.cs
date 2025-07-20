@@ -113,7 +113,7 @@ public class GameManager : MonoBehaviour
     void SpawnNextSegment()
     {
         previousPosition += offset;
-        string tag = segmentTags[Random.Range(0, segmentTags.Count)];
+        string tag = segmentTags[Random.Range(1, segmentTags.Count)];
         GameObject segment = ObjectPooler.Instance.SpawnFromPool(tag, previousPosition, Quaternion.identity);
         activeSegments.Enqueue(segment);
 
